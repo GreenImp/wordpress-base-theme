@@ -9,3 +9,147 @@ License: n/a
 License URI: n/a
 Tags: responsive, mobile, base, bill, greenimp, green, imp
 */
+
+
+
+/* ==========================================================================
+ * Images
+ * ========================================================================== */
+
+.alignleft {
+	float: left;
+}
+.alignright {
+	float: right;
+}
+.aligncenter {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+}
+.entry-content img,
+.comment-content img,
+.widget img,
+img.header-image,
+.author-avatar img,
+img.wp-post-image {
+	/* Add fancy borders to all WordPress-added images but not things like badges and icons and the like */
+	border:8px solid #fff;
+	border-radius:3px;
+	box-shadow:0 1px 4px rgba(0, 0, 0, 0.2);
+}
+.wp-caption {
+	max-width: 100%; /* Keep wide captions from overflowing their container. */
+	padding: 4px;
+}
+.wp-caption .wp-caption-text,
+.gallery-caption,
+.entry-caption {
+	margin:5px 0 0;
+	font-style: italic;
+	font-size: 12px;
+	font-size: 0.857142857rem;
+	line-height: 2;
+	color: #757575;
+}
+img.wp-smiley,
+.rsswidget img {
+	border: 0;
+	border-radius: 0;
+	box-shadow: none;
+	margin-bottom: 0;
+	margin-top: 0;
+	padding: 0;
+}
+.entry-content dl.gallery-item {
+	margin: 0;
+}
+.gallery-item a,
+.gallery-caption {
+	width: 90%;
+}
+.gallery-item a {
+	display: block;
+}
+.gallery-caption a {
+	display: inline;
+}
+.gallery-columns-1 .gallery-item a {
+	max-width: 100%;
+	width: auto;
+}
+.gallery .gallery-icon img {
+	height: auto;
+	max-width: 90%;
+	padding: 5%;
+}
+.gallery-columns-1 .gallery-icon img {
+	padding: 3%;
+}
+
+
+
+/* ==========================================================================
+ * Posts
+ * ========================================================================== */
+
+.site-content article.post{
+	margin-bottom:40px;
+	padding-bottom:20px;
+	border-bottom:1px solid #ccc;
+}
+
+header.entry-header{
+	margin-bottom:20px;
+}
+
+footer.entry-meta{
+	font-size:0.9em;
+}
+
+.form-allowed-tags{
+	font-size:0.9em;
+}
+
+.assistive-text,
+.site .screen-reader-text{
+	position:absolute !important;
+	clip:rect(1px, 1px, 1px, 1px);
+}
+
+
+
+/* ==========================================================================
+ * Comments
+ * ========================================================================== */
+
+.nav-single + .comments-area,
+#comment-nav-above{
+	margin-top:40px;
+}
+
+#comments ol.commentlist,
+#comments ol.commentlist ol{
+	list-style:none;
+}
+
+.comments-area article{
+	padding:20px 0;
+	border-bottom:1px solid #ccc;
+}
+.comments-area article header img.avatar{
+	margin-right:10px;
+}
+
+
+
+/* ==========================================================================
+ * Media queries
+ * ========================================================================== */
+
+@media only screen and (max-width: 767px) {
+	#sidebar{
+		padding-top:20px;
+		border-top:1px solid #ccc;
+	}
+}

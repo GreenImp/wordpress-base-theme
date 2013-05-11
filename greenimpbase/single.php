@@ -10,7 +10,8 @@
 get_header();
 ?>
 <div class="row">
-	<section id="primary" class="column ten site-content">
+	<section id="primary" class="column nine site-content">
+		<div class="innerContent">
 			<?php while ( have_posts() ) : the_post(); ?>
 				<?php get_template_part( 'content', get_post_format() ); ?>
 
@@ -23,6 +24,7 @@ get_header();
 				<?php comments_template( '', true ); ?>
 
 			<?php endwhile; // end of the loop. ?>
+		</div>
 	</section>
 	<?php get_sidebar(); ?>
 </div>

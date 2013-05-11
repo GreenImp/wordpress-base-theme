@@ -24,6 +24,9 @@ if(!class_exists('Theme')){
 			// add nicer meta titles
 			add_filter('wp_title', array($this, 'wpTitle'), 10, 2);
 
+			// add meta data (keywords, description)
+			add_filter('wp_head', array($this, 'headerMeta'));
+
 			// page menu call
 			add_filter('wp_page_menu_args', array($this, 'pageMenuArgs'));
 
@@ -34,6 +37,9 @@ if(!class_exists('Theme')){
 			add_action('init', array($this, 'loadJQuery'));
 			// enqueue CSS and JS
 			add_action('wp_enqueue_scripts', array($this, 'enqueueScripts'));
+
+			// add hook for theme specific smilies :)
+			add_filter('smilies_src', array($this, 'customSmilies'), 1, 10);
 		}
 
 		/**
@@ -51,6 +57,26 @@ if(!class_exists('Theme')){
 			}
 
 			return self::$instance;
+		}
+
+		/**
+		 * Sub strings the given string
+		 *
+		 * @param $str
+		 * @param $len
+		 * @return string
+		 */
+		private function subStr($str, $len){
+			$end = ' [...]';
+
+			/// try mb_substr first, as it's far more accurate
+			if(function_exists('mb_strlen') && function_exists('mb_substr') && (mb_strlen($str) > $len)){
+				$str = mb_substr($str, 0, $len-strlen($end)) . $end;
+			}elseif(strlen($str) > $len){
+				$str = substr($str, 0, $len-strlen($end)) . $end;
+			}
+
+			return $str;
 		}
 
 		public function getThemeName(){
@@ -90,6 +116,7 @@ if(!class_exists('Theme')){
 		 * Adds a favicon link to the page head
 		 */
 		public function faviconLink(){
+			// TODO - check if favicon exists
 			echo '<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />' . "\n";
 		}
 
@@ -120,6 +147,79 @@ if(!class_exists('Theme')){
 				$title = "$title $sep " . sprintf( __( 'Page %s', $this->getThemeName() ), max( $paged, $page ) );
 
 			return $title;
+		}
+
+		/**
+ 		 * Output the meta data for the current page (keywords, description)
+		 */
+		public function headerMeta(){
+			$keywords = '';
+			$description = '';
+
+			if(is_single() || is_page()){
+				// we're on a single post or a page
+				if(have_posts()){
+					while(have_posts()){
+						the_post();
+
+						// check if we have a custom field for keywords
+						$keywords = trim(trim(get_post_meta(get_the_ID(), 'meta_keywords', true), ','));
+						if($keywords == ''){
+							// no custom field defined or is empty - get keywords from post tags
+							foreach(get_the_tags() as $tag){
+								$keywords .= utf8_decode(apply_filters('the_tags', $tag->name)) . ',';
+							}
+							$keywords = rtrim($keywords, ',');
+						}
+
+						// check if we have a custom field for the description
+						$description = trim(get_post_meta(get_the_ID(), 'meta_description', true));
+						if($description == ''){
+							// no custom field defined or is empty - get the post excerpt
+							$description = get_the_excerpt();
+						}
+					}
+				}
+			}elseif(is_category()){
+				// we're on a category page
+				$description = category_description();
+			}elseif(is_archive()){
+				// we're on an archive page
+				if(is_day()){
+					$description = sprintf( __('Daily Archives: %s', $this->getThemeName()), get_the_date());
+				}elseif(is_month()){
+					$description = sprintf( __('Monthly Archives: %s', $this->getThemeName()), get_the_date(_x('F Y', 'monthly archives date format', $this->getThemeName())));
+				}elseif(is_year()){
+					$description = sprintf( __('Yearly Archives: %s', $this->getThemeName()), get_the_date(_x('Y', 'yearly archives date format', $this->getThemeName())));
+				}else{
+					$description = _e('Archives', $this->getThemeName());
+				}
+
+				$description .= ' - ' . get_bloginfo('description');
+			}
+
+			// if no description was defined, default to the blog description
+			$description = ($description == '') ? get_bloginfo('description') : $description;
+
+			if($keywords == ''){
+				// no keywords defined - let's try and generate some, based on the page title
+
+				// TODO - perhaps we should try and grab the most commonly used post tags here?
+
+				// list the words which we want to remove
+				$blacklist = array(
+					'a', 'and', 'it', 'of', 'off', 'or', 'the', 'where', 'which'
+				);
+				// build our keywords, from the page title
+				$keywords = implode(',', array_unique(array_filter(explode(' ', preg_replace(
+					'/([^a-z0-9 ]+)|( (' . implode('|', $blacklist) . '))|((' . implode('|', $blacklist) . ') )/i',
+					' ',
+					wp_title('|', false, 'right')
+				)))));
+			}
+
+			echo '<meta name="keywords" content="' . $keywords . '">' . "\n" .
+				'<meta name="description" content="' . $this->subStr($description, 160) . '">' . "\n";
 		}
 
 		/**
@@ -193,14 +293,18 @@ if(!class_exists('Theme')){
 		 * Enqueue scripts and styles
 		 */
 		public function enqueueScripts(){
+			// include bill and bill-ui (from greenimpbase)
 			wp_enqueue_style('bill', get_template_directory_uri() . '/assets/css/bill.min.css');
 			wp_enqueue_style('bill-ui', get_template_directory_uri() . '/assets/css/bill-ui.min.css');
 
+			// include the theme's style css file (from the current theme - usually a child)
 			wp_enqueue_style('style', get_stylesheet_uri());
 
-
+			// include bill and main JS (from greenimpbase)
 			wp_enqueue_script('bill-js', get_template_directory_uri() . '/assets/js/bill.min.js', array('jquery'), '0.1', true);
+			wp_enqueue_script('greenimp-js', get_template_directory_uri() . '/assets/js/main.js', array('jquery'), '0.1', true);
 
+			// include modernizr (from greenimpbase)
 			wp_enqueue_script('modernizr', get_template_directory_uri() . '/assets/resources/modernizr-2.6.2.min.js', null, '2.6.2', true);
 
 			if ( is_singular() && comments_open() && get_option( 'thread_comments' ) ) {
@@ -369,6 +473,30 @@ if(!class_exists('Theme')){
 				$date,
 				$author
 			);
+		}
+
+		/**
+		 * Enables theme specific smilies
+		 *
+		 * @param $imageSrc
+		 * @param $img
+		 * @param $siteURL
+		 * @return string
+		 */
+		public function customSmilies($imageSrc, $img, $siteURL){
+			$themePath = '/assets/images/smilies/';
+			$customPath = '/images/smilies/';
+
+			if(file_exists(get_stylesheet_directory() . $themePath . $img)){
+				// the current theme has custom smilies
+				return get_stylesheet_directory_uri() . $themePath . $img;
+			}elseif(file_exists(WP_CONTENT_DIR . $customPath . $img)){
+				// custom smilies exist in the wp-content folder
+				return WP_CONTENT_URL . $customPath . $img;
+			}
+
+			// no custom smilies found - show default
+			return $imageSrc;
 		}
 	}
 }

@@ -12,7 +12,7 @@ $theme = Theme::getInstance();
 
 		<footer id="footer">
 			<address>
-				&copy; 2013-<?php echo date('Y'); ?> <?php bloginfo('name'); ?>
+				&copy; <?php echo date('Y'); ?> <?php bloginfo('name'); ?>
 			</address>
 
 			<div class="attribution">

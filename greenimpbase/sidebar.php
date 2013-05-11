@@ -8,7 +8,7 @@
 
 $theme = Theme::getInstance();
 ?>
-	<div id="sidebar" class="column two">
+	<div id="sidebar" class="column three">
 		<div class="widget-area">
 			<?php if(!is_active_sidebar('sidebar-1') || !dynamic_sidebar('sidebar-1')){ ?>
 			<aside id="search" class="widget widget_search">
