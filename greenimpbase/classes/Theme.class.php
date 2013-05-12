@@ -79,6 +79,11 @@ if(!class_exists('Theme')){
 			return $str;
 		}
 
+		/**
+		 * Returns the theme's name
+		 *
+		 * @return string
+		 */
 		public function getThemeName(){
 			return $this->themeName;
 		}
@@ -192,7 +197,7 @@ if(!class_exists('Theme')){
 				}elseif(is_year()){
 					$description = sprintf( __('Yearly Archives: %s', $this->getThemeName()), get_the_date(_x('Y', 'yearly archives date format', $this->getThemeName())));
 				}else{
-					$description = _e('Archives', $this->getThemeName());
+					$description = __('Archives', $this->getThemeName());
 				}
 
 				$description .= ' - ' . get_bloginfo('description');
