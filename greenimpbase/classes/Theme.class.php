@@ -127,7 +127,25 @@ if(!class_exists('Theme')){
 			if(file_exists(ABSPATH . 'favicon.ico')){
 				echo '<link rel="shortcut icon" type="image/x-icon" href="' . site_url() . 'favicon.ico" />' . "\n";
 			}
-			// TODO - add IOS bookmark icons
+
+			// <link rel="apple-touch-icon" sizes="57x57" href="apple-icon-57x57.png" />
+			$iconName = 'apple-icon-%s%s.png';
+			$iconSizes = array(
+				'57x57',
+				'72x72',
+				'114x114',
+				'144x144'
+			);
+			// loop through the icon sizes and check if an icon exists for it
+			foreach($iconSizes as $size){
+				if(file_exists(ABSPATH . ($file = sprintf($iconName, $size, '')))){
+					// we have a normal icon file
+					echo '<link rel="apple-touch-icon" sizes="' . $size . '" href="' . site_url() . $file . '">';
+				}elseif(file_exists(ABSPATH . ($file = sprintf($iconName, $size, '-precomposed')))){
+					// we have a pre-composed icon file
+					echo '<link rel="apple-touch-icon-precomposed" sizes="' . $size . '" href="' . site_url() . $file . '">';
+				}
+			}
 		}
 
 		/**
