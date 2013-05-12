@@ -519,7 +519,7 @@ if(!class_exists('Theme')){
 			$args['smallest']	= '0.75';
 			$args['largest']	= '1.5';
 
-			return array();
+			return $args;
 		}
 	}
 }
