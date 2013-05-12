@@ -124,8 +124,10 @@ if(!class_exists('Theme')){
 		 * Adds a favicon link to the page head
 		 */
 		public function faviconLink(){
-			// TODO - check if favicon exists
-			echo '<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />' . "\n";
+			if(file_exists(ABSPATH . 'favicon.ico')){
+				echo '<link rel="shortcut icon" type="image/x-icon" href="' . site_url() . 'favicon.ico" />' . "\n";
+			}
+			// TODO - add IOS bookmark icons
 		}
 
 		/**
