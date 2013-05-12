@@ -124,26 +124,43 @@ if(!class_exists('Theme')){
 		 * Adds a favicon link to the page head
 		 */
 		public function faviconLink(){
+			/**
+			 * Add the favicon
+			 */
 			if(file_exists(ABSPATH . 'favicon.ico')){
+				// we've got an ico favicon
 				echo '<link rel="shortcut icon" type="image/x-icon" href="' . site_url() . 'favicon.ico" />' . "\n";
+			}elseif(file_exists(ABSPATH . 'favicon.png')){
+				// we;ve got a png favicon
+				echo '<link rel="icon" type="image/png" href="' . site_url() . 'favicon.png" />' . "\n";
 			}
 
-			// <link rel="apple-touch-icon" sizes="57x57" href="apple-icon-57x57.png" />
-			$iconName = 'apple-icon-%s%s.png';
-			$iconSizes = array(
+			/**
+			 * Add references to any existing IOS icons
+			 */
+			$iconName = 'apple-icon-%s%s.png';	// the icon name convention
+			$iconSizes = array(					// available icon sizes
 				'57x57',
 				'72x72',
 				'114x114',
 				'144x144'
 			);
+			// check if a default icon exists (no size defined)
+			if(file_exists(ABSPATH . ($file = sprintf($iconName, '', '')))){
+				// we have a normal icon file
+				echo '<link rel="apple-touch-icon" href="' . site_url() . $file . '">' . "\n";
+			}elseif(file_exists(ABSPATH . ($file = sprintf($iconName, '', '-precomposed')))){
+				// we have a pre-composed icon file
+				echo '<link rel="apple-touch-icon-precomposed" href="' . site_url() . $file . '">' . "\n";
+			}
 			// loop through the icon sizes and check if an icon exists for it
 			foreach($iconSizes as $size){
-				if(file_exists(ABSPATH . ($file = sprintf($iconName, $size, '')))){
+				if(file_exists(ABSPATH . ($file = sprintf($iconName, '-' . $size, '')))){
 					// we have a normal icon file
-					echo '<link rel="apple-touch-icon" sizes="' . $size . '" href="' . site_url() . $file . '">';
-				}elseif(file_exists(ABSPATH . ($file = sprintf($iconName, $size, '-precomposed')))){
+					echo '<link rel="apple-touch-icon" sizes="' . $size . '" href="' . site_url() . $file . '">' . "\n";
+				}elseif(file_exists(ABSPATH . ($file = sprintf($iconName, '-' . $size, '-precomposed')))){
 					// we have a pre-composed icon file
-					echo '<link rel="apple-touch-icon-precomposed" sizes="' . $size . '" href="' . site_url() . $file . '">';
+					echo '<link rel="apple-touch-icon-precomposed" sizes="' . $size . '" href="' . site_url() . $file . '">' . "\n";
 				}
 			}
 		}
