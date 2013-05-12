@@ -40,6 +40,9 @@ if(!class_exists('Theme')){
 
 			// add hook for theme specific smilies :)
 			add_filter('smilies_src', array($this, 'customSmilies'), 1, 10);
+
+			// modify how tag clouds are output
+			add_filter( 'widget_tag_cloud_args', array($this, 'tagCloudSettings'));
 		}
 
 		/**
@@ -502,6 +505,21 @@ if(!class_exists('Theme')){
 
 			// no custom smilies found - show default
 			return $imageSrc;
+		}
+
+		/**
+		 * Defines the default tag cloud settings
+		 *
+		 * @param array $args
+		 * @return array
+		 */
+		public function tagCloudSettings(array $args){
+			// define the font size and unit
+			$args['unit']		= 'em';
+			$args['smallest']	= '0.75';
+			$args['largest']	= '1.5';
+
+			return array();
 		}
 	}
 }
