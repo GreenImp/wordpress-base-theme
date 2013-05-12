@@ -129,10 +129,10 @@ if(!class_exists('Theme')){
 			 */
 			if(file_exists(ABSPATH . 'favicon.ico')){
 				// we've got an ico favicon
-				echo '<link rel="shortcut icon" type="image/x-icon" href="' . site_url() . 'favicon.ico" />' . "\n";
+				echo '<link rel="shortcut icon" type="image/x-icon" href="' . rtrim(site_url(), '/') . '/favicon.ico" />' . "\n";
 			}elseif(file_exists(ABSPATH . 'favicon.png')){
 				// we;ve got a png favicon
-				echo '<link rel="icon" type="image/png" href="' . site_url() . 'favicon.png" />' . "\n";
+				echo '<link rel="icon" type="image/png" href="' . rtrim(site_url(), '/') . '/favicon.png" />' . "\n";
 			}
 
 			/**
@@ -148,19 +148,19 @@ if(!class_exists('Theme')){
 			// check if a default icon exists (no size defined)
 			if(file_exists(ABSPATH . ($file = sprintf($iconName, '', '')))){
 				// we have a normal icon file
-				echo '<link rel="apple-touch-icon" href="' . site_url() . $file . '">' . "\n";
+				echo '<link rel="apple-touch-icon" href="' . rtrim(site_url(), '/') . '/' . $file . '">' . "\n";
 			}elseif(file_exists(ABSPATH . ($file = sprintf($iconName, '', '-precomposed')))){
 				// we have a pre-composed icon file
-				echo '<link rel="apple-touch-icon-precomposed" href="' . site_url() . $file . '">' . "\n";
+				echo '<link rel="apple-touch-icon-precomposed" href="' . rtrim(site_url(), '/') . '/' . $file . '">' . "\n";
 			}
 			// loop through the icon sizes and check if an icon exists for it
 			foreach($iconSizes as $size){
 				if(file_exists(ABSPATH . ($file = sprintf($iconName, '-' . $size, '')))){
 					// we have a normal icon file
-					echo '<link rel="apple-touch-icon" sizes="' . $size . '" href="' . site_url() . $file . '">' . "\n";
+					echo '<link rel="apple-touch-icon" sizes="' . $size . '" href="' . rtrim(site_url(), '/') . '/' . $file . '">' . "\n";
 				}elseif(file_exists(ABSPATH . ($file = sprintf($iconName, '-' . $size, '-precomposed')))){
 					// we have a pre-composed icon file
-					echo '<link rel="apple-touch-icon-precomposed" sizes="' . $size . '" href="' . site_url() . $file . '">' . "\n";
+					echo '<link rel="apple-touch-icon-precomposed" sizes="' . $size . '" href="' . rtrim(site_url(), '/') . '/' . $file . '">' . "\n";
 				}
 			}
 		}
