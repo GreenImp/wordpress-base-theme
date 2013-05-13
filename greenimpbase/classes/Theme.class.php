@@ -70,10 +70,13 @@ if(!class_exists('Theme')){
 		 *
 		 * @param $str
 		 * @param $len
+		 * @param bool $byWord
 		 * @return string
 		 */
-		private function subStr($str, $len){
+		private function subStr($str, $len, $byWord = false){
 			$end = ' [...]';
+
+			// TODO - if $byWord == true, then trim down to whole word, don't cut off words
 
 			/// try mb_substr first, as it's far more accurate
 			if(function_exists('mb_strlen') && function_exists('mb_substr') && (mb_strlen($str) > $len)){
@@ -311,25 +314,40 @@ if(!class_exists('Theme')){
 				$description = ($description == '') ? get_bloginfo('description') : $description;
 
 				if($keywords == ''){
-					// no keywords defined - let's try and generate some, based on the page title
+					// no keywords defined - let's try and generate some
 
-					// TODO - perhaps we should try and grab the most commonly used post tags here?
+					// get a list of post tags
+					$keywords = wp_tag_cloud(array(
+						'number'	=> 20,
+						'format'	=> 'flat',
+						'separator'	=> ',',
+						'orderby'	=> 'count',
+						'order'		=> 'DESC',
+						'echo'		=> false
+					));
+					if(!is_null($keywords)){
+						// post tags defined - remove html entities and use as keywords
+						$keywords = strip_tags($keywords);
+					}else{
+						// no post tags defined - generate keywords based on the page title
 
-					// list the words which we want to remove
-					$blacklist = array(
-						'a', 'and', 'it', 'of', 'off', 'or', 'the', 'where', 'which'
-					);
-					// build our keywords, from the page title
-					$keywords = array_unique(array_filter(explode(' ', preg_replace('/[^a-z0-9 ]+/', ' ', strtolower(wp_title('|', false, 'right'))))));
-					foreach($keywords as $k => $word){
-						if(in_array($word, $blacklist)){
-							unset($keywords[$k]);
+						// list the words which we want to remove
+						$blacklist = array(
+							'a', 'and', 'it', 'of', 'off', 'or', 'the', 'where', 'which'
+						);
+						// build our keywords, from the page title
+						$keywords = array_unique(array_filter(explode(' ', preg_replace('/[^a-z0-9 ]+/', ' ', strtolower(wp_title('|', false, 'right'))))));
+						// loop through and remove any blacklisted words
+						foreach($keywords as $k => $word){
+							if(in_array($word, $blacklist)){
+								unset($keywords[$k]);
+							}
 						}
+						$keywords = implode(',', $keywords);
 					}
-					$keywords = implode(',', $keywords);
 				}
 
-				echo '<meta name="keywords" content="' . $keywords . '">' . "\n" .
+				echo '<meta name="keywords" content="' . $this->subStr($keywords, 255, true) . '">' . "\n" .
 					'<meta name="description" content="' . $this->subStr($description, 160) . '">' . "\n";
 			}
 		}
