@@ -71,18 +71,32 @@ if(!class_exists('Theme')){
 		 * @param $str
 		 * @param $len
 		 * @param bool $byWord
+		 * @param bool $addEnd
 		 * @return string
 		 */
-		private function subStr($str, $len, $byWord = false){
+		private function subStr($str, $len, $byWord = false, $addEnd = true){
 			$end = ' [...]';
 
-			// TODO - if $byWord == true, then trim down to whole word, don't cut off words
-
-			/// try mb_substr first, as it's far more accurate
+			// try mb_substr first, as it's far more accurate
 			if(function_exists('mb_strlen') && function_exists('mb_substr') && (mb_strlen($str) > $len)){
-				$str = mb_substr($str, 0, $len-strlen($end)) . $end;
+				// the string is too long
+				$str = mb_substr($str, 0, $len-($addEnd ? strlen($end) : 0));
 			}elseif(strlen($str) > $len){
-				$str = substr($str, 0, $len-strlen($end)) . $end;
+				// no mb_substr, but the string is still too long
+				$str = substr($str, 0, $len-($addEnd ? strlen($end) : 0));
+			}else{
+				// string is within the boundaries - just return it
+				return $str;
+			}
+
+			// if we're here, then the string was sub-stringed
+			if($byWord){
+				// we are sub stringing by whole word
+				$str = preg_replace('/\s+?(\S+)?$/', '', $str);
+			}
+			if($addEnd){
+				// we need to add the 'end' string
+				$str .= $end;
 			}
 
 			return $str;
@@ -347,7 +361,7 @@ if(!class_exists('Theme')){
 					}
 				}
 
-				echo '<meta name="keywords" content="' . $this->subStr($keywords, 255, true) . '">' . "\n" .
+				echo '<meta name="keywords" content="' . $this->subStr($keywords, 255, true, false) . '">' . "\n" .
 					'<meta name="description" content="' . $this->subStr($description, 160) . '">' . "\n";
 			}
 		}
