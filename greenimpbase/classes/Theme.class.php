@@ -170,27 +170,29 @@ if(!class_exists('Theme')){
 			 */
 			$iconName = 'apple-icon-%s%s.png';	// the icon name convention
 			$iconSizes = array(					// available icon sizes
+				'',
 				'57x57',
 				'72x72',
 				'114x114',
 				'144x144'
 			);
-			// check if a default icon exists (no size defined)
-			if(file_exists(ABSPATH . ($file = sprintf($iconName, '', '')))){
-				// we have a normal icon file
-				echo '<link rel="apple-touch-icon" href="' . rtrim(site_url(), '/') . '/' . $file . '">' . "\n";
-			}elseif(file_exists(ABSPATH . ($file = sprintf($iconName, '', '-precomposed')))){
-				// we have a pre-composed icon file
-				echo '<link rel="apple-touch-icon-precomposed" href="' . rtrim(site_url(), '/') . '/' . $file . '">' . "\n";
-			}
-			// loop through the icon sizes and check if an icon exists for it
+
 			foreach($iconSizes as $size){
-				if(file_exists(ABSPATH . ($file = sprintf($iconName, '-' . $size, '')))){
-					// we have a normal icon file
-					echo '<link rel="apple-touch-icon" sizes="' . $size . '" href="' . rtrim(site_url(), '/') . '/' . $file . '">' . "\n";
-				}elseif(file_exists(ABSPATH . ($file = sprintf($iconName, '-' . $size, '-precomposed')))){
-					// we have a pre-composed icon file
-					echo '<link rel="apple-touch-icon-precomposed" sizes="' . $size . '" href="' . rtrim(site_url(), '/') . '/' . $file . '">' . "\n";
+				$hasSize = $size != '';	// check whether we actually have a size defined or if it is empty (default)
+
+				$files = array(
+					'apple-touch-icon'				=> sprintf($iconName, $hasSize ? '-' . $size : '', ''),
+					'apple-touch-icon-precomposed'	=> sprintf($iconName, $hasSize ? '-' . $size : '', '-precomposed')
+				);
+
+				foreach($directories as $dir => $url){
+					foreach($files as $rel => $file){
+						if(file_exists($dir . $file)){
+							// we have an icon file
+							echo '<link rel="' . $rel . '"' . ($hasSize ? ' sizes="' . $size . '"' : '') . ' href="' . $url . $file . '">' . "\n";
+							break 2;	// break out of the file and directories loop
+						}
+					}
 				}
 			}
 		}
