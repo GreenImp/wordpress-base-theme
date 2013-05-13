@@ -233,18 +233,14 @@ if(!class_exists('Theme')){
 			// we only want to continue if no SEO plugins are enabled
 
 			// list of SEO plugins that should stop our own meta data being used
-			// we are only listing the name and url for personal reference, so I can remember what's what
 			$pluginChecks = array(
-				array(
-					'name'	=> 'WordPress SEO by Yoast',
-					'url'	=> 'http://wordpress.org/extend/plugins/wordpress-seo/',
-					'file'	=> 'wordpress-seo/wp-seo.php'
-				),
-				array(
-					'name'	=> 'WordPress Meta Keywords',
-					'url'	=> 'http://wordpress.org/extend/plugins/wordpress-meta-keywords/',
-					'file'	=> 'wordpress-meta-keywords/wordpress-meta-keywords.php'
-				)
+				// WordPress SEO by Yoast
+				// http://wordpress.org/extend/plugins/wordpress-seo/
+				'wordpress-seo/wp-seo.php',
+
+				// WordPress Meta Keywords
+				// http://wordpress.org/extend/plugins/wordpress-meta-keywords/
+				'wordpress-meta-keywords/wordpress-meta-keywords.php'
 			);
 			$hasSEOPlugin = false;
 			if(!empty($pluginChecks)){
@@ -253,7 +249,7 @@ if(!class_exists('Theme')){
 
 				// loop through each SEO plugin and check if it is active
 				foreach($pluginChecks as $plugin){
-					if(is_plugin_active($plugin['file'])){
+					if(is_plugin_active($plugin)){
 						// this SEO plugin is enabled
 						$hasSEOPlugin = true;
 						break;
