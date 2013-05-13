@@ -261,7 +261,7 @@ if(!class_exists('Theme')){
 			}
 
 			// only continue if no SEO plugins were enabled
-			if($hasSEOPlugin){
+			if(!$hasSEOPlugin){
 				$keywords = '';
 				$description = '';
 
@@ -320,11 +320,13 @@ if(!class_exists('Theme')){
 						'a', 'and', 'it', 'of', 'off', 'or', 'the', 'where', 'which'
 					);
 					// build our keywords, from the page title
-					$keywords = implode(',', array_unique(array_filter(explode(' ', preg_replace(
-						'/([^a-z0-9 ]+)|( (' . implode('|', $blacklist) . '))|((' . implode('|', $blacklist) . ') )/i',
-						' ',
-						wp_title('|', false, 'right')
-					)))));
+					$keywords = array_unique(array_filter(explode(' ', preg_replace('/[^a-z0-9 ]+/', ' ', strtolower(wp_title('|', false, 'right'))))));
+					foreach($keywords as $k => $word){
+						if(in_array($word, $blacklist)){
+							unset($keywords[$k]);
+						}
+					}
+					$keywords = implode(',', $keywords);
 				}
 
 				echo '<meta name="keywords" content="' . $keywords . '">' . "\n" .
