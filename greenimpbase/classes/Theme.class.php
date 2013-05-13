@@ -41,6 +41,9 @@ if(!class_exists('Theme')){
 			// add hook for theme specific smilies :)
 			add_filter('smilies_src', array($this, 'customSmilies'), 1, 10);
 
+			// add hook for adding buttons to the WYSIWYG
+			add_filter('mce_buttons_2', array($this, 'wysiwygButtons'));
+
 			// modify how tag clouds are output
 			add_filter( 'widget_tag_cloud_args', array($this, 'tagCloudSettings'));
 		}
@@ -604,6 +607,27 @@ if(!class_exists('Theme')){
 
 			// no custom smilies found - show default
 			return $imageSrc;
+		}
+
+		/**
+		 * Enables some WYSIWYG buttons that Wordpress disables
+		 *
+		 * @param array $buttons
+		 * @return array
+		 */
+		public function wysiwygButtons(array $buttons){
+			if(false !== ($key = array_search('forecolor', $buttons))){
+				// put the anchor button after the forecolor button
+				array_splice($buttons, $key+1, 0, 'anchor');
+			}elseif(false !== ($key = array_search('wp_help', $buttons))){
+				// put the anchor button before the help button
+				array_splice($buttons, $key, 0, 'anchor');
+			}else{
+				// neither button found - put it add the end of the list
+				$buttons[] = 'anchor';
+			}
+
+			return $buttons;
 		}
 
 		/**
