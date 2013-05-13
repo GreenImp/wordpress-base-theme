@@ -92,6 +92,25 @@ if(!class_exists('Theme')){
 		}
 
 		/**
+		 * Returns the current theme's directory path,
+		 * for server-side use
+		 *
+		 * @return string
+		 */
+		public function getThemeDirectory(){
+			return rtrim(get_stylesheet_directory(), '/') . '/';
+		}
+
+		/**
+		 * Returns the current themes full URL
+		 *
+		 * @return mixed
+		 */
+		public function getThemeURL(){
+			return rtrim(get_stylesheet_directory_uri(), '/') . '/';
+		}
+
+		/**
 		 * Sets up theme defaults and registers the various WordPress features that
 		 * the theme supports.
 		 */
@@ -124,15 +143,26 @@ if(!class_exists('Theme')){
 		 * Adds a favicon link to the page head
 		 */
 		public function faviconLink(){
+			// list of directories to check for icons
+			$directories = array(
+				$this->getThemeDirectory()	=> $this->getThemeURL(),		// theme directory
+				rtrim(ABSPATH, '/') . '/'	=> rtrim(site_url(), '/') . '/'	// web root
+			);
+
 			/**
 			 * Add the favicon
+			 * Loop through each directory and check for the favicon
 			 */
-			if(file_exists(ABSPATH . 'favicon.ico')){
-				// we've got an ico favicon
-				echo '<link rel="shortcut icon" type="image/x-icon" href="' . rtrim(site_url(), '/') . '/favicon.ico" />' . "\n";
-			}elseif(file_exists(ABSPATH . 'favicon.png')){
-				// we;ve got a png favicon
-				echo '<link rel="icon" type="image/png" href="' . rtrim(site_url(), '/') . '/favicon.png" />' . "\n";
+			foreach($directories as $dir => $url){
+				if(file_exists($dir . 'favicon.ico')){
+					// ico file exists
+					echo '<link rel="shortcut icon" type="image/x-icon" href="' . $url . 'favicon.ico">' . "\n";
+					break;
+				}elseif(file_exists($dir . 'favicon.png')){
+					// png file exists
+					echo '<link rel="icon" type="image/png" href="' . $url . 'favicon.png">' . "\n";
+					break;
+				}
 			}
 
 			/**
@@ -529,15 +559,15 @@ if(!class_exists('Theme')){
 		 * @return string
 		 */
 		public function customSmilies($imageSrc, $img, $siteURL){
-			$themePath = '/assets/images/smilies/';
-			$customPath = '/images/smilies/';
+			$themePath = 'assets/images/smilies/';
+			$customPath = 'images/smilies/';
 
-			if(file_exists(get_stylesheet_directory() . $themePath . $img)){
+			if(file_exists($this->getThemeDirectory() . $themePath . $img)){
 				// the current theme has custom smilies
-				return get_stylesheet_directory_uri() . $themePath . $img;
-			}elseif(file_exists(WP_CONTENT_DIR . $customPath . $img)){
+				return $this->getThemeURL() . $themePath . $img;
+			}elseif(file_exists(rtrim(WP_CONTENT_DIR, '/') . '/' . $customPath . $img)){
 				// custom smilies exist in the wp-content folder
-				return WP_CONTENT_URL . $customPath . $img;
+				return rtrim(WP_CONTENT_URL, '/') . '/' . $customPath . $img;
 			}
 
 			// no custom smilies found - show default
