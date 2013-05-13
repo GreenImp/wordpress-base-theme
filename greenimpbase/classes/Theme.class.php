@@ -230,73 +230,107 @@ if(!class_exists('Theme')){
  		 * Output the meta data for the current page (keywords, description)
 		 */
 		public function headerMeta(){
-			$keywords = '';
-			$description = '';
+			// we only want to continue if no SEO plugins are enabled
 
-			if(is_single() || is_page()){
-				// we're on a single post or a page
-				if(have_posts()){
-					while(have_posts()){
-						the_post();
+			// list of SEO plugins that should stop our own meta data being used
+			// we are only listing the name and url for personal reference, so I can remember what's what
+			$pluginChecks = array(
+				array(
+					'name'	=> 'WordPress SEO by Yoast',
+					'url'	=> 'http://wordpress.org/extend/plugins/wordpress-seo/',
+					'file'	=> 'wordpress-seo/wp-seo.php'
+				),
+				array(
+					'name'	=> 'WordPress Meta Keywords',
+					'url'	=> 'http://wordpress.org/extend/plugins/wordpress-meta-keywords/',
+					'file'	=> 'wordpress-meta-keywords/wordpress-meta-keywords.php'
+				)
+			);
+			$hasSEOPlugin = false;
+			if(!empty($pluginChecks)){
+				// include the plugin function
+				include_once(ABSPATH . 'wp-admin/includes/plugin.php');
 
-						// check if we have a custom field for keywords
-						$keywords = trim(trim(get_post_meta(get_the_ID(), 'meta_keywords', true), ','));
-						if($keywords == ''){
-							// no custom field defined or is empty - get keywords from post tags
-							foreach(get_the_tags() as $tag){
-								$keywords .= utf8_decode(apply_filters('the_tags', $tag->name)) . ',';
-							}
-							$keywords = rtrim($keywords, ',');
-						}
-
-						// check if we have a custom field for the description
-						$description = trim(get_post_meta(get_the_ID(), 'meta_description', true));
-						if($description == ''){
-							// no custom field defined or is empty - get the post excerpt
-							$description = get_the_excerpt();
-						}
+				// loop through each SEO plugin and check if it is active
+				foreach($pluginChecks as $plugin){
+					if(is_plugin_active($plugin['file'])){
+						// this SEO plugin is enabled
+						$hasSEOPlugin = true;
+						break;
 					}
 				}
-			}elseif(is_category()){
-				// we're on a category page
-				$description = category_description();
-			}elseif(is_archive()){
-				// we're on an archive page
-				if(is_day()){
-					$description = sprintf( __('Daily Archives: %s', $this->getThemeName()), get_the_date());
-				}elseif(is_month()){
-					$description = sprintf( __('Monthly Archives: %s', $this->getThemeName()), get_the_date(_x('F Y', 'monthly archives date format', $this->getThemeName())));
-				}elseif(is_year()){
-					$description = sprintf( __('Yearly Archives: %s', $this->getThemeName()), get_the_date(_x('Y', 'yearly archives date format', $this->getThemeName())));
-				}else{
-					$description = __('Archives', $this->getThemeName());
+			}
+
+			// only continue if no SEO plugins were enabled
+			if($hasSEOPlugin){
+				$keywords = '';
+				$description = '';
+
+				if(is_single() || is_page()){
+					// we're on a single post or a page
+					if(have_posts()){
+						while(have_posts()){
+							the_post();
+
+							// check if we have a custom field for keywords
+							$keywords = trim(trim(get_post_meta(get_the_ID(), 'meta_keywords', true), ','));
+							if($keywords == ''){
+								// no custom field defined or is empty - get keywords from post tags
+								foreach(get_the_tags() as $tag){
+									$keywords .= utf8_decode(apply_filters('the_tags', $tag->name)) . ',';
+								}
+								$keywords = rtrim($keywords, ',');
+							}
+
+							// check if we have a custom field for the description
+							$description = trim(get_post_meta(get_the_ID(), 'meta_description', true));
+							if($description == ''){
+								// no custom field defined or is empty - get the post excerpt
+								$description = get_the_excerpt();
+							}
+						}
+					}
+				}elseif(is_category()){
+					// we're on a category page
+					$description = category_description();
+				}elseif(is_archive()){
+					// we're on an archive page
+					if(is_day()){
+						$description = sprintf( __('Daily Archives: %s', $this->getThemeName()), get_the_date());
+					}elseif(is_month()){
+						$description = sprintf( __('Monthly Archives: %s', $this->getThemeName()), get_the_date(_x('F Y', 'monthly archives date format', $this->getThemeName())));
+					}elseif(is_year()){
+						$description = sprintf( __('Yearly Archives: %s', $this->getThemeName()), get_the_date(_x('Y', 'yearly archives date format', $this->getThemeName())));
+					}else{
+						$description = __('Archives', $this->getThemeName());
+					}
+
+					$description .= ' - ' . get_bloginfo('description');
 				}
 
-				$description .= ' - ' . get_bloginfo('description');
+				// if no description was defined, default to the blog description
+				$description = ($description == '') ? get_bloginfo('description') : $description;
+
+				if($keywords == ''){
+					// no keywords defined - let's try and generate some, based on the page title
+
+					// TODO - perhaps we should try and grab the most commonly used post tags here?
+
+					// list the words which we want to remove
+					$blacklist = array(
+						'a', 'and', 'it', 'of', 'off', 'or', 'the', 'where', 'which'
+					);
+					// build our keywords, from the page title
+					$keywords = implode(',', array_unique(array_filter(explode(' ', preg_replace(
+						'/([^a-z0-9 ]+)|( (' . implode('|', $blacklist) . '))|((' . implode('|', $blacklist) . ') )/i',
+						' ',
+						wp_title('|', false, 'right')
+					)))));
+				}
+
+				echo '<meta name="keywords" content="' . $keywords . '">' . "\n" .
+					'<meta name="description" content="' . $this->subStr($description, 160) . '">' . "\n";
 			}
-
-			// if no description was defined, default to the blog description
-			$description = ($description == '') ? get_bloginfo('description') : $description;
-
-			if($keywords == ''){
-				// no keywords defined - let's try and generate some, based on the page title
-
-				// TODO - perhaps we should try and grab the most commonly used post tags here?
-
-				// list the words which we want to remove
-				$blacklist = array(
-					'a', 'and', 'it', 'of', 'off', 'or', 'the', 'where', 'which'
-				);
-				// build our keywords, from the page title
-				$keywords = implode(',', array_unique(array_filter(explode(' ', preg_replace(
-					'/([^a-z0-9 ]+)|( (' . implode('|', $blacklist) . '))|((' . implode('|', $blacklist) . ') )/i',
-					' ',
-					wp_title('|', false, 'right')
-				)))));
-			}
-
-			echo '<meta name="keywords" content="' . $keywords . '">' . "\n" .
-				'<meta name="description" content="' . $this->subStr($description, 160) . '">' . "\n";
 		}
 
 		/**
