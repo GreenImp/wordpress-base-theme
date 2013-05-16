@@ -29,9 +29,10 @@ require_once(dirname(__FILE__) . '/classes/Theme.class.php');
 /**
  * Set the content width based on the theme's design and stylesheet.
  *
- * @since pixieproduce 0.1
+ * @since greenimpbase 0.1
  */
-if ( ! isset( $content_width ) )
+if ( ! isset( $content_width ) ){
     $content_width = 1140; /* pixels */
+}
 
-$theme = Theme::getInstance('greenimpbase');
+$theme = Theme::getInstance('greenimpbase', isset($themeOptions) ? $themeOptions : array(), isset($themeScripts) ? $themeScripts : array());

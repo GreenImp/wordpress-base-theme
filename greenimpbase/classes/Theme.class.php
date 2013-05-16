@@ -10,10 +10,14 @@ if(!class_exists('Theme')){
 	class Theme{
 		private static $instance = null;
 
-		private $themeName = '';
+		protected $themeName = '';
+		protected $options = array();
+		protected $scripts = array();
 
-		private function __construct($themeName, $setupOptions = array(), $jQuery = null, $scripts = array()){
+		private function __construct($themeName, $options = array(), $scripts = array()){
 			$this->themeName = $themeName;
+			$this->options = $options;
+			$this->scripts = $scripts;
 
 			// add the setup call
 			add_action('after_setup_theme', array($this, 'setup'));
@@ -41,22 +45,24 @@ if(!class_exists('Theme')){
 			// add hook for theme specific smilies :)
 			add_filter('smilies_src', array($this, 'customSmilies'), 1, 10);
 
+			// add hook for adding buttons to the WYSIWYG
+			add_filter('mce_buttons_2', array($this, 'wysiwygButtons'));
+
 			// modify how tag clouds are output
-			add_filter( 'widget_tag_cloud_args', array($this, 'tagCloudSettings'));
+			add_filter('widget_tag_cloud_args', array($this, 'tagCloudSettings'));
 		}
 
 		/**
 		 * returns the singleton instance of Theme
 		 *
 		 * @param $themeName
-		 * @param array $setupOptions
-		 * @param null $jQuery
+		 * @param array $options
 		 * @param array $scripts
-		 * @return null|Theme
+		 * @return Theme
 		 */
-		public static function getInstance($themeName = '', $setupOptions = array(), $jQuery = null, $scripts = array()){
+		public static function getInstance($themeName = '', $options = array(), $scripts = array()){
 			if(!is_a(self::$instance, 'Theme')){
-				self::$instance = new Theme($themeName, $setupOptions = array(), $jQuery = null, $scripts = array());
+				self::$instance = new Theme($themeName, $options, $scripts);
 			}
 
 			return self::$instance;
@@ -67,16 +73,33 @@ if(!class_exists('Theme')){
 		 *
 		 * @param $str
 		 * @param $len
+		 * @param bool $byWord
+		 * @param bool $addEnd
 		 * @return string
 		 */
-		private function subStr($str, $len){
+		protected function subStr($str, $len, $byWord = false, $addEnd = true){
 			$end = ' [...]';
 
-			/// try mb_substr first, as it's far more accurate
+			// try mb_substr first, as it's far more accurate
 			if(function_exists('mb_strlen') && function_exists('mb_substr') && (mb_strlen($str) > $len)){
-				$str = mb_substr($str, 0, $len-strlen($end)) . $end;
+				// the string is too long
+				$str = mb_substr($str, 0, $len-($addEnd ? strlen($end) : 0));
 			}elseif(strlen($str) > $len){
-				$str = substr($str, 0, $len-strlen($end)) . $end;
+				// no mb_substr, but the string is still too long
+				$str = substr($str, 0, $len-($addEnd ? strlen($end) : 0));
+			}else{
+				// string is within the boundaries - just return it
+				return $str;
+			}
+
+			// if we're here, then the string was sub-stringed
+			if($byWord){
+				// we are sub stringing by whole word
+				$str = preg_replace('/\s+?(\S+)?$/', '', $str);
+			}
+			if($addEnd){
+				// we need to add the 'end' string
+				$str .= $end;
 			}
 
 			return $str;
@@ -89,6 +112,25 @@ if(!class_exists('Theme')){
 		 */
 		public function getThemeName(){
 			return $this->themeName;
+		}
+
+		/**
+		 * Returns the current theme's directory path,
+		 * for server-side use
+		 *
+		 * @return string
+		 */
+		public function getThemeDirectory(){
+			return rtrim(get_stylesheet_directory(), '/') . '/';
+		}
+
+		/**
+		 * Returns the current themes full URL
+		 *
+		 * @return mixed
+		 */
+		public function getThemeURL(){
+			return rtrim(get_stylesheet_directory_uri(), '/') . '/';
 		}
 
 		/**
@@ -121,18 +163,43 @@ if(!class_exists('Theme')){
 		}
 
 		/**
+		 * Returns whether the theme should show
+		 * the Wordpress attribution or not
+		 *
+		 * @return bool
+		 */
+		public function getAttribution(){
+			return isset($this->options['attribution']) ?
+					$this->options['attribution'] :
+					'<a href="http://wordpress.org/" target="_blank" title="' . esc_attr(__('Semantic Personal Publishing Platform', $this->getThemeName())) . '">' . sprintf( __( 'Powered by %s', $this->getThemeName()), 'WordPress' ) . '</a>
+					|
+					<a href="http://greenimp.co.uk" target="_blank" title="Web development Devon">Theme by GreenImp</a>';
+		}
+
+		/**
 		 * Adds a favicon link to the page head
 		 */
 		public function faviconLink(){
+			// list of directories to check for icons
+			$directories = array(
+				$this->getThemeDirectory()	=> $this->getThemeURL(),		// theme directory
+				rtrim(ABSPATH, '/') . '/'	=> rtrim(site_url(), '/') . '/'	// web root
+			);
+
 			/**
 			 * Add the favicon
+			 * Loop through each directory and check for the favicon
 			 */
-			if(file_exists(ABSPATH . 'favicon.ico')){
-				// we've got an ico favicon
-				echo '<link rel="shortcut icon" type="image/x-icon" href="' . rtrim(site_url(), '/') . '/favicon.ico" />' . "\n";
-			}elseif(file_exists(ABSPATH . 'favicon.png')){
-				// we;ve got a png favicon
-				echo '<link rel="icon" type="image/png" href="' . rtrim(site_url(), '/') . '/favicon.png" />' . "\n";
+			foreach($directories as $dir => $url){
+				if(file_exists($dir . 'favicon.ico')){
+					// ico file exists
+					echo '<link rel="shortcut icon" type="image/x-icon" href="' . $url . 'favicon.ico">' . "\n";
+					break;
+				}elseif(file_exists($dir . 'favicon.png')){
+					// png file exists
+					echo '<link rel="icon" type="image/png" href="' . $url . 'favicon.png">' . "\n";
+					break;
+				}
 			}
 
 			/**
@@ -140,27 +207,29 @@ if(!class_exists('Theme')){
 			 */
 			$iconName = 'apple-icon-%s%s.png';	// the icon name convention
 			$iconSizes = array(					// available icon sizes
+				'',
 				'57x57',
 				'72x72',
 				'114x114',
 				'144x144'
 			);
-			// check if a default icon exists (no size defined)
-			if(file_exists(ABSPATH . ($file = sprintf($iconName, '', '')))){
-				// we have a normal icon file
-				echo '<link rel="apple-touch-icon" href="' . rtrim(site_url(), '/') . '/' . $file . '">' . "\n";
-			}elseif(file_exists(ABSPATH . ($file = sprintf($iconName, '', '-precomposed')))){
-				// we have a pre-composed icon file
-				echo '<link rel="apple-touch-icon-precomposed" href="' . rtrim(site_url(), '/') . '/' . $file . '">' . "\n";
-			}
-			// loop through the icon sizes and check if an icon exists for it
+
 			foreach($iconSizes as $size){
-				if(file_exists(ABSPATH . ($file = sprintf($iconName, '-' . $size, '')))){
-					// we have a normal icon file
-					echo '<link rel="apple-touch-icon" sizes="' . $size . '" href="' . rtrim(site_url(), '/') . '/' . $file . '">' . "\n";
-				}elseif(file_exists(ABSPATH . ($file = sprintf($iconName, '-' . $size, '-precomposed')))){
-					// we have a pre-composed icon file
-					echo '<link rel="apple-touch-icon-precomposed" sizes="' . $size . '" href="' . rtrim(site_url(), '/') . '/' . $file . '">' . "\n";
+				$hasSize = $size != '';	// check whether we actually have a size defined or if it is empty (default)
+
+				$files = array(
+					'apple-touch-icon'				=> sprintf($iconName, $hasSize ? '-' . $size : '', ''),
+					'apple-touch-icon-precomposed'	=> sprintf($iconName, $hasSize ? '-' . $size : '', '-precomposed')
+				);
+
+				foreach($directories as $dir => $url){
+					foreach($files as $rel => $file){
+						if(file_exists($dir . $file)){
+							// we have an icon file
+							echo '<link rel="' . $rel . '"' . ($hasSize ? ' sizes="' . $size . '"' : '') . ' href="' . $url . $file . '">' . "\n";
+							break 2;	// break out of the file and directories loop
+						}
+					}
 				}
 			}
 		}
@@ -198,73 +267,120 @@ if(!class_exists('Theme')){
  		 * Output the meta data for the current page (keywords, description)
 		 */
 		public function headerMeta(){
-			$keywords = '';
-			$description = '';
+			// we only want to continue if no SEO plugins are enabled
 
-			if(is_single() || is_page()){
-				// we're on a single post or a page
-				if(have_posts()){
-					while(have_posts()){
-						the_post();
+			// list of SEO plugins that should stop our own meta data being used
+			$pluginChecks = array(
+				// WordPress SEO by Yoast
+				// http://wordpress.org/extend/plugins/wordpress-seo/
+				'wordpress-seo/wp-seo.php',
 
-						// check if we have a custom field for keywords
-						$keywords = trim(trim(get_post_meta(get_the_ID(), 'meta_keywords', true), ','));
-						if($keywords == ''){
-							// no custom field defined or is empty - get keywords from post tags
-							foreach(get_the_tags() as $tag){
-								$keywords .= utf8_decode(apply_filters('the_tags', $tag->name)) . ',';
-							}
-							$keywords = rtrim($keywords, ',');
-						}
+				// WordPress Meta Keywords
+				// http://wordpress.org/extend/plugins/wordpress-meta-keywords/
+				'wordpress-meta-keywords/wordpress-meta-keywords.php'
+			);
+			$hasSEOPlugin = false;
+			if(!empty($pluginChecks)){
+				// include the plugin function
+				include_once(ABSPATH . 'wp-admin/includes/plugin.php');
 
-						// check if we have a custom field for the description
-						$description = trim(get_post_meta(get_the_ID(), 'meta_description', true));
-						if($description == ''){
-							// no custom field defined or is empty - get the post excerpt
-							$description = get_the_excerpt();
-						}
+				// loop through each SEO plugin and check if it is active
+				foreach($pluginChecks as $plugin){
+					if(is_plugin_active($plugin)){
+						// this SEO plugin is enabled
+						$hasSEOPlugin = true;
+						break;
 					}
 				}
-			}elseif(is_category()){
-				// we're on a category page
-				$description = category_description();
-			}elseif(is_archive()){
-				// we're on an archive page
-				if(is_day()){
-					$description = sprintf( __('Daily Archives: %s', $this->getThemeName()), get_the_date());
-				}elseif(is_month()){
-					$description = sprintf( __('Monthly Archives: %s', $this->getThemeName()), get_the_date(_x('F Y', 'monthly archives date format', $this->getThemeName())));
-				}elseif(is_year()){
-					$description = sprintf( __('Yearly Archives: %s', $this->getThemeName()), get_the_date(_x('Y', 'yearly archives date format', $this->getThemeName())));
-				}else{
-					$description = __('Archives', $this->getThemeName());
+			}
+
+			// only continue if no SEO plugins were enabled
+			if(!$hasSEOPlugin){
+				$keywords = '';
+				$description = '';
+
+				if(is_single() || is_page()){
+					// we're on a single post or a page
+					if(have_posts()){
+						while(have_posts()){
+							the_post();
+
+							// check if we have a custom field for keywords
+							$keywords = trim(trim(get_post_meta(get_the_ID(), 'meta_keywords', true), ','));
+							if($keywords == ''){
+								// no custom field defined or is empty - get keywords from post tags
+								foreach(get_the_tags() as $tag){
+									$keywords .= utf8_decode(apply_filters('the_tags', $tag->name)) . ',';
+								}
+								$keywords = rtrim($keywords, ',');
+							}
+
+							// check if we have a custom field for the description
+							$description = trim(get_post_meta(get_the_ID(), 'meta_description', true));
+							if($description == ''){
+								// no custom field defined or is empty - get the post excerpt
+								$description = get_the_excerpt();
+							}
+						}
+					}
+				}elseif(is_category()){
+					// we're on a category page
+					$description = category_description();
+				}elseif(is_archive()){
+					// we're on an archive page
+					if(is_day()){
+						$description = sprintf( __('Daily Archives: %s', $this->getThemeName()), get_the_date());
+					}elseif(is_month()){
+						$description = sprintf( __('Monthly Archives: %s', $this->getThemeName()), get_the_date(_x('F Y', 'monthly archives date format', $this->getThemeName())));
+					}elseif(is_year()){
+						$description = sprintf( __('Yearly Archives: %s', $this->getThemeName()), get_the_date(_x('Y', 'yearly archives date format', $this->getThemeName())));
+					}else{
+						$description = __('Archives', $this->getThemeName());
+					}
+
+					$description .= ' - ' . get_bloginfo('description');
 				}
 
-				$description .= ' - ' . get_bloginfo('description');
+				// if no description was defined, default to the blog description
+				$description = ($description == '') ? get_bloginfo('description') : $description;
+
+				if($keywords == ''){
+					// no keywords defined - let's try and generate some
+
+					// get a list of post tags
+					$keywords = wp_tag_cloud(array(
+						'number'	=> 20,
+						'format'	=> 'flat',
+						'separator'	=> ',',
+						'orderby'	=> 'count',
+						'order'		=> 'DESC',
+						'echo'		=> false
+					));
+					if(!is_null($keywords)){
+						// post tags defined - remove html entities and use as keywords
+						$keywords = strip_tags($keywords);
+					}else{
+						// no post tags defined - generate keywords based on the page title
+
+						// list the words which we want to remove
+						$blacklist = array(
+							'a', 'and', 'it', 'of', 'off', 'or', 'the', 'where', 'which'
+						);
+						// build our keywords, from the page title
+						$keywords = array_unique(array_filter(explode(' ', preg_replace('/[^a-z0-9 ]+/', ' ', strtolower(wp_title('|', false, 'right'))))));
+						// loop through and remove any blacklisted words
+						foreach($keywords as $k => $word){
+							if(in_array($word, $blacklist)){
+								unset($keywords[$k]);
+							}
+						}
+						$keywords = implode(',', $keywords);
+					}
+				}
+
+				echo '<meta name="keywords" content="' . $this->subStr($keywords, 255, true, false) . '">' . "\n" .
+					'<meta name="description" content="' . $this->subStr($description, 160) . '">' . "\n";
 			}
-
-			// if no description was defined, default to the blog description
-			$description = ($description == '') ? get_bloginfo('description') : $description;
-
-			if($keywords == ''){
-				// no keywords defined - let's try and generate some, based on the page title
-
-				// TODO - perhaps we should try and grab the most commonly used post tags here?
-
-				// list the words which we want to remove
-				$blacklist = array(
-					'a', 'and', 'it', 'of', 'off', 'or', 'the', 'where', 'which'
-				);
-				// build our keywords, from the page title
-				$keywords = implode(',', array_unique(array_filter(explode(' ', preg_replace(
-					'/([^a-z0-9 ]+)|( (' . implode('|', $blacklist) . '))|((' . implode('|', $blacklist) . ') )/i',
-					' ',
-					wp_title('|', false, 'right')
-				)))));
-			}
-
-			echo '<meta name="keywords" content="' . $keywords . '">' . "\n" .
-				'<meta name="description" content="' . $this->subStr($description, 160) . '">' . "\n";
 		}
 
 		/**
@@ -314,17 +430,18 @@ if(!class_exists('Theme')){
 		}
 
 		/*
-		 * Ensure that Wordpress uses the specified
-		 * version of jQuery, if newer than the default.
+		 * Ensure that Wordpress uses the specified version of
+		 * jQuery (defined in $options['jQuery'], when initialising
+		 * the class), if newer than the default.
 		 * It also loads jquery from the Google CDN
 		 * and sets it to load in the footer
 		 */
-		public function loadJQuery($version = '1.9.1'){
+		public function loadJQuery(){
 			global $wp_scripts;
 
 			if(!is_admin()){
 				$currentVersion = $wp_scripts->registered['jquery']->ver;
-				$version = ($version == '') ? '1.9.1' : $version;
+				$version = isset($this->options['jQuery']) ? $this->options['jQuery'] : '1.9.1';
 				$version = (version_compare($version, $currentVersion) == 1) ? $version : $currentVersion;
 
 				// comment out the next two lines to load the local copy of jQuery
@@ -352,8 +469,84 @@ if(!class_exists('Theme')){
 			// include modernizr (from greenimpbase)
 			wp_enqueue_script('modernizr', get_template_directory_uri() . '/assets/resources/modernizr-2.6.2.min.js', null, '2.6.2', true);
 
-			if ( is_singular() && comments_open() && get_option( 'thread_comments' ) ) {
+			if(is_singular() && comments_open() && get_option('thread_comments')){
 				wp_enqueue_script( 'comment-reply' );
+			}
+
+			// check for any CSS/JS to enqueue
+			if(count($this->scripts) > 0){
+				foreach($this->scripts as $item){
+					$data = array(
+						'type'		=> '',
+						'handle'	=> '',
+						'src'		=> '',
+						'depend'	=> array(),
+						'version'	=> '0.0.1',
+						'media'		=> 'all',
+						'inFooter'	=> true
+					);
+
+					if(is_array($item)){
+						if(!isset($item['src'])){
+							// no URL defined - continue to the nxt script
+							continue;
+						}
+
+						// set the type
+						if(isset($item['type']) && (($item['type'] == 'css') || ($item['type'] == 'js'))){
+							$data['type'] = $item['type'];
+						}
+
+						// set the name
+						if(isset($item['handle'])){
+							$data['handle'] = trim($item['handle']);
+						}
+
+						// set the dependencies
+						if(isset($item['depend']) && is_array($item['depend'])){
+							$data['depend'] = $item['depend'];
+						}
+
+						// set the media (only applies to css)
+						if(isset($item['media'])){
+							$data['media'] = $item['media'];
+						}
+
+						// set whether it should be in the header or footer (only applies to JS)
+						if(isset($item['inFooter']) && (false == $item['inFooter'])){
+							$data['inFooter'] = false;
+						}
+					}else{
+						// item is just a URL
+						$data['src'] = $item;
+					}
+
+					// check the assigned data
+					if($data['type'] == ''){
+						// no data type defined
+						if(preg_match('/\.(css|js)$/', strtolower($data['src']), $matches)){
+							// data type determined from the URL
+							$data['type'] = $matches[1];
+						}else{
+							// unable to determine data type
+							continue;
+						}
+					}
+
+					if($data['handle'] == ''){
+						// no name defined - generate a random one
+						$data['handle'] = $this->themeName . '_' . time() . mt_rand(0, 9999) . '_' . mt_rand(0, 9999);
+					}
+
+					switch($data['type']){
+						case 'css':
+							wp_enqueue_style($data['handle'], $data['src'], $data['depend'], $data['version'], $data['media']);
+						break;
+						case 'js':
+							wp_enqueue_script($data['handle'], $data['src'], $data['depend'], $data['version'], $data['inFooter']);
+						break;
+					}
+				}
 			}
 		}
 
@@ -374,7 +567,7 @@ if(!class_exists('Theme')){
 		}
 
 		/**
-		 * Builds a Wordpress page nave,
+		 * Builds a Wordpress page nav,
 		 * with some pre-defined settings
 		 *
 		 * @param array $args
@@ -529,19 +722,40 @@ if(!class_exists('Theme')){
 		 * @return string
 		 */
 		public function customSmilies($imageSrc, $img, $siteURL){
-			$themePath = '/assets/images/smilies/';
-			$customPath = '/images/smilies/';
+			$themePath = 'assets/images/smilies/';
+			$customPath = 'images/smilies/';
 
-			if(file_exists(get_stylesheet_directory() . $themePath . $img)){
+			if(file_exists($this->getThemeDirectory() . $themePath . $img)){
 				// the current theme has custom smilies
-				return get_stylesheet_directory_uri() . $themePath . $img;
-			}elseif(file_exists(WP_CONTENT_DIR . $customPath . $img)){
+				return $this->getThemeURL() . $themePath . $img;
+			}elseif(file_exists(rtrim(WP_CONTENT_DIR, '/') . '/' . $customPath . $img)){
 				// custom smilies exist in the wp-content folder
-				return WP_CONTENT_URL . $customPath . $img;
+				return rtrim(WP_CONTENT_URL, '/') . '/' . $customPath . $img;
 			}
 
 			// no custom smilies found - show default
 			return $imageSrc;
+		}
+
+		/**
+		 * Enables some WYSIWYG buttons that Wordpress disables
+		 *
+		 * @param array $buttons
+		 * @return array
+		 */
+		public function wysiwygButtons(array $buttons){
+			if(false !== ($key = array_search('forecolor', $buttons))){
+				// put the anchor button after the forecolor button
+				array_splice($buttons, $key+1, 0, 'anchor');
+			}elseif(false !== ($key = array_search('wp_help', $buttons))){
+				// put the anchor button before the help button
+				array_splice($buttons, $key, 0, 'anchor');
+			}else{
+				// neither button found - put it add the end of the list
+				$buttons[] = 'anchor';
+			}
+
+			return $buttons;
 		}
 
 		/**
