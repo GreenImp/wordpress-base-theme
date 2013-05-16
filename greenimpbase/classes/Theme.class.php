@@ -163,8 +163,7 @@ if(!class_exists('Theme')){
 		}
 
 		/**
-		 * Returns whether the theme should show
-		 * the Wordpress attribution or not
+		 * Returns the theme attribution
 		 *
 		 * @return bool
 		 */
@@ -735,27 +734,6 @@ if(!class_exists('Theme')){
 
 			// no custom smilies found - show default
 			return $imageSrc;
-		}
-
-		/**
-		 * Enables some WYSIWYG buttons that Wordpress disables
-		 *
-		 * @param array $buttons
-		 * @return array
-		 */
-		public function wysiwygButtons(array $buttons){
-			if(false !== ($key = array_search('forecolor', $buttons))){
-				// put the anchor button after the forecolor button
-				array_splice($buttons, $key+1, 0, 'anchor');
-			}elseif(false !== ($key = array_search('wp_help', $buttons))){
-				// put the anchor button before the help button
-				array_splice($buttons, $key, 0, 'anchor');
-			}else{
-				// neither button found - put it add the end of the list
-				$buttons[] = 'anchor';
-			}
-
-			return $buttons;
 		}
 
 		/**
