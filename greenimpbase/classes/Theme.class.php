@@ -31,6 +31,8 @@ if(!class_exists('Theme')){
 			// add meta data (keywords, description)
 			add_filter('wp_head', array($this, 'headerMeta'));
 
+			add_filter('body_class', array($this, 'bodyClass'));
+
 			// page menu call
 			add_filter('wp_page_menu_args', array($this, 'pageMenuArgs'));
 
@@ -380,6 +382,31 @@ if(!class_exists('Theme')){
 				echo '<meta name="keywords" content="' . $this->subStr($keywords, 255, true, false) . '">' . "\n" .
 					'<meta name="description" content="' . $this->subStr($description, 160) . '">' . "\n";
 			}
+		}
+
+		/**
+		 * Add extra (helpful) classes to the body
+		 *
+		 * @param $classes
+		 * @return array
+		 */
+		public function bodyClass($classes){
+			global $post;
+			if(isset($post)){
+				$classes[] = $post->post_type . '-' . $post->post_name;
+			}
+
+			if(isset($this->options['bodyClass'])){
+				if(!is_array($this->options['bodyClass'])){
+					$this->options['bodyClass'] = array($this->options['bodyClass']);
+				}
+
+				foreach($this->options['bodyClass'] as $class){
+					$classes[] = $class;
+				}
+			}
+
+			return $classes;
 		}
 
 		/**
