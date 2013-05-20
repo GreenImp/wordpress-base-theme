@@ -47,6 +47,9 @@ if(!class_exists('Theme')){
 			// add hook for theme specific smilies :)
 			add_filter('smilies_src', array($this, 'customSmilies'), 1, 10);
 
+			// add hook for allowing custom default avatars on a per-theme basis
+			add_filter('avatar_defaults', array($this, 'defaultAvatar'));
+
 			// add hook for adding buttons to the WYSIWYG
 			add_filter('mce_buttons_2', array($this, 'wysiwygButtons'));
 
@@ -762,6 +765,27 @@ if(!class_exists('Theme')){
 
 			// no custom smilies found - show default
 			return $imageSrc;
+		}
+
+		/**
+		 * Enables theme specific default avatars
+		 *
+		 * @param $avatar_defaults
+		 * @return mixed
+		 */
+		public function defaultAvatar($avatar_defaults){
+			$filename = '%sassets/images/avatar.%s';
+
+			$fileTypes = array('png', 'jpg', 'jpeg', 'gif');
+			foreach($fileTypes as $type){
+				if(file_exists(sprintf($filename, $this->getThemeDirectory(), $type))){
+					// file found - add it to the list and end the loop
+					$avatar_defaults[sprintf($filename, $this->getThemeURL(), $type)] = 'Theme';
+					break;
+				}
+			}
+
+		    return $avatar_defaults;
 		}
 
 		/**
