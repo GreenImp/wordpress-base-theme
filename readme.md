@@ -5,7 +5,7 @@ The base theme includes all of the default functionality that a typical theme wo
 
 * automatic favicon and apple touch icon link tag generation.
 * Meta keyword and description generation
-* Loads jQuery from the Google CDN and allows yuo to specify which version to load
+* Loads jQuery from the Google CDN and allows you to specify which version to load
 * Custom smilies, in posts and comments
 * and much more...
 
