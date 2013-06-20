@@ -55,6 +55,10 @@ if(!class_exists('Theme')){
 
 			// modify how tag clouds are output
 			add_filter('widget_tag_cloud_args', array($this, 'tagCloudSettings'));
+
+			// replace the captions with HTML5 fig and figcaptions
+			add_shortcode('wp_caption', array($this, 'captionShortcode'));
+			add_shortcode('caption', array($this, 'captionShortcode'));
 		}
 
 		/**
@@ -801,6 +805,35 @@ if(!class_exists('Theme')){
 			$args['largest']	= '1.5';
 
 			return $args;
+		}
+
+		/**
+		 * Replace the default captions with HTML5 equivalents
+		 *
+		 * @param $attr
+		 * @param null $content
+		 * @return string
+		 */
+		function captionShortcode($attr, $content = null){
+			extract(shortcode_atts(
+				array(
+					'id'		=> '',
+					'align'		=> 'alignnone',
+					'width'		=> '',
+					'caption'	=> ''
+				),
+				$attr
+			));
+
+			if((1 > (int) $width) || empty($caption)){
+				// no width or no caption defined
+				return $val;
+			}
+
+			return '<figure id="' . $id . '" aria-describedby="figcaption_' . $id . ' class="wp-caption ' . esc_attr($align) . '" style="width: ' . $width . 'px;">' .
+						do_shortcode($content) .
+						'<figcaption id="figcaption_' . $id . '" class="wp-caption-text">' . $caption . '</figcaption>
+					</figure>';
 		}
 	}
 }
