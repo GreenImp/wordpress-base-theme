@@ -57,8 +57,9 @@ if(!class_exists('Theme')){
 			add_filter('widget_tag_cloud_args', array($this, 'tagCloudSettings'));
 
 			// replace the captions with HTML5 fig and figcaptions
-			add_shortcode('wp_caption', array($this, 'captionShortcode'));
-			add_shortcode('caption', array($this, 'captionShortcode'));
+			//add_shortcode('wp_caption', array($this, 'captionShortcode'));
+			//add_shortcode('caption', array($this, 'captionShortcode'));
+			add_filter('img_caption_shortcode', array($this, 'captionShortcode'), 10, 3);
 		}
 
 		/**
@@ -810,11 +811,12 @@ if(!class_exists('Theme')){
 		/**
 		 * Replace the default captions with HTML5 equivalents
 		 *
-		 * @param $attr
-		 * @param null $content
+		 * @param string $val
+		 * @param array $attr
+		 * @param null|string $content
 		 * @return string
 		 */
-		function captionShortcode($attr, $content = null){
+		function captionShortcode($val, $attr, $content = null){
 			extract(shortcode_atts(
 				array(
 					'id'		=> '',
@@ -825,12 +827,13 @@ if(!class_exists('Theme')){
 				$attr
 			));
 
-			if((1 > (int) $width) || empty($caption)){
+			//if((1 > (int) $width) || empty($caption)){
+			if(empty($caption)){
 				// no width or no caption defined
 				return $val;
 			}
 
-			return '<figure id="' . $id . '" aria-describedby="figcaption_' . $id . ' class="wp-caption ' . esc_attr($align) . '" style="width: ' . $width . 'px;">' .
+			return '<figure id="' . $id . '" aria-describedby="figcaption_' . $id . '" class="wp-caption ' . esc_attr($align) . '"' . (($width != '') ? ' style="width: ' . $width . 'px;"' : '') . '>' .
 						do_shortcode($content) .
 						'<figcaption id="figcaption_' . $id . '" class="wp-caption-text">' . $caption . '</figcaption>
 					</figure>';
