@@ -24,7 +24,7 @@ $theme = Theme::getInstance();
 	<link href="<?php echo get_template_directory_uri(); ?>/assets/css/bill-ui.min.css" rel="stylesheet" media="all">
 
 	<!--[if lt IE 9]>
-	<script src="<?php echo get_template_directory_uri(); ?>/assets/resources/html5shiv.js"></script>
+	<script src="<?php echo get_template_directory_uri(); ?>/assets/vendor/html5shiv.js"></script>
 	<![endif]-->
 
 	<?php wp_head(); ?>

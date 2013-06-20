@@ -57,8 +57,6 @@ if(!class_exists('Theme')){
 			add_filter('widget_tag_cloud_args', array($this, 'tagCloudSettings'));
 
 			// replace the captions with HTML5 fig and figcaptions
-			//add_shortcode('wp_caption', array($this, 'captionShortcode'));
-			//add_shortcode('caption', array($this, 'captionShortcode'));
 			add_filter('img_caption_shortcode', array($this, 'captionShortcode'), 10, 3);
 		}
 
@@ -502,7 +500,7 @@ if(!class_exists('Theme')){
 			wp_enqueue_script('greenimp-js', get_template_directory_uri() . '/assets/js/main.js', array('jquery'), '0.1', true);
 
 			// include modernizr (from greenimpbase)
-			wp_enqueue_script('modernizr', get_template_directory_uri() . '/assets/resources/modernizr-2.6.2.min.js', null, '2.6.2', true);
+			wp_enqueue_script('modernizr', get_template_directory_uri() . '/assets/vendor/modernizr-2.6.2.min.js', null, '2.6.2', true);
 
 			if(is_singular() && comments_open() && get_option('thread_comments')){
 				wp_enqueue_script( 'comment-reply' );
@@ -523,7 +521,7 @@ if(!class_exists('Theme')){
 
 					if(is_array($item)){
 						if(!isset($item['src'])){
-							// no URL defined - continue to the nxt script
+							// no URL defined - continue to the next script
 							continue;
 						}
 
@@ -625,7 +623,7 @@ if(!class_exists('Theme')){
 		 */
 		function filterPageMenu($output){
 			if(preg_match('/^(\n|\r)*<div([^>]+)>(.*?)<\/div>(\n|\r)*$/', $output, $matches)){
-				$output = '<nav' . str_replace('class="menu"', 'class="nav"', $matches[2]) . '>' . $matches[3] . '</nav>';
+				$output = '<nav' . str_replace('class="menu"', 'class="nav"', $matches[2]) . ' data-nav>' . $matches[3] . '</nav>';
 			}
 
 			return $output;
@@ -827,7 +825,6 @@ if(!class_exists('Theme')){
 				$attr
 			));
 
-			//if((1 > (int) $width) || empty($caption)){
 			if(empty($caption)){
 				// no width or no caption defined
 				return $val;

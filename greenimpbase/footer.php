@@ -24,10 +24,5 @@ $theme = Theme::getInstance();
 	</div>
 
 	<?php wp_footer(); ?>
-	<script>
-		(function($, document){
-			$(document).bill('browserNotice');
-		})(jQuery, document);
-	</script>
 </body>
 </html>
