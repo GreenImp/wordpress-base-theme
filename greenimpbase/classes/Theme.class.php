@@ -592,8 +592,7 @@ if(!class_exists('Theme')){
 		public function wpNavMenu($args = array()){
 			$args = array_merge(array(
 				'theme_location'	=> 'primary',
-				'container'			=> 'nav',
-				'container_class'	=> 'nav'
+				'container'			=> false
 			), $args);
 
 			wp_nav_menu($args);

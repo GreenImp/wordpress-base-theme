@@ -42,7 +42,9 @@ $theme = Theme::getInstance();
 				<?php } ?>
 			</hgroup>
 
-			<?php $theme->wpNavMenu(); ?>
+			<nav class="nav" data-nav>
+				<?php $theme->wpNavMenu(); ?>
+			</nav>
 		</header>
 
 		<div id="main">
