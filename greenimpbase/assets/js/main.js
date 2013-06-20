@@ -6,8 +6,9 @@
  */
 
 ;(function($, window, document){
-	$(document).bill();
-
-	// add modal dialogue to image links
-	//$('.entry-content').find('a[href$="jpg"], a[href$="png"], a[href$="jpeg"]').bill('modal');
+	$(document).bill({
+		modal:{
+			handle:'.entry-content a[href$="jpg"], .entry-content a[href$="png"], .entry-content a[href$="jpeg"]'
+		}
+	});
 })(jQuery, window, document);
