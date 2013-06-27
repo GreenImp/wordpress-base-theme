@@ -212,7 +212,7 @@ if(!class_exists('Theme')){
 			/**
 			 * Add references to any existing IOS icons
 			 */
-			$iconName = 'apple-icon-%s%s.png';	// the icon name convention
+			$iconName = 'apple-icon%s%s.png';	// the icon name convention
 			$iconSizes = array(					// available icon sizes
 				'',
 				'57x57',
