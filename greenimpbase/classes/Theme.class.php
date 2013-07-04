@@ -492,6 +492,11 @@ if(!class_exists('Theme')){
 			wp_enqueue_style('bill', get_template_directory_uri() . '/assets/css/bill.min.css');
 			wp_enqueue_style('bill-ui', get_template_directory_uri() . '/assets/css/bill-ui.min.css');
 
+			// optional - include RTL (Right To Left) support
+			if(isset($this->options['rtl']) && $this->options['rtl']){
+				wp_enqueue_style('bill', get_template_directory_uri() . '/assets/css/bill-rtl.min.css');
+			}
+
 			// include the theme's style css file (from the current theme - usually a child)
 			wp_enqueue_style('style', get_stylesheet_uri());
 
