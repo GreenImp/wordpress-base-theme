@@ -20,9 +20,6 @@ $theme = Theme::getInstance();
 
 	<link rel="pingback" href="<?php bloginfo('pingback_url'); ?>">
 
-	<link href="<?php echo get_template_directory_uri(); ?>/assets/css/bill.min.css" rel="stylesheet" media="all">
-	<link href="<?php echo get_template_directory_uri(); ?>/assets/css/bill-ui.min.css" rel="stylesheet" media="all">
-
 	<!--[if lt IE 9]>
 	<script src="<?php echo get_template_directory_uri(); ?>/assets/vendor/html5shiv.js"></script>
 	<![endif]-->
