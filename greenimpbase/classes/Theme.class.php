@@ -500,9 +500,8 @@ if(!class_exists('Theme')){
 			// include the theme's style css file (from the current theme - usually a child)
 			wp_enqueue_style('style', get_stylesheet_uri());
 
-			// include bill and main JS (from greenimpbase)
+			// include bill JS (from greenimpbase)
 			wp_enqueue_script('bill-js', get_template_directory_uri() . '/assets/js/bill.min.js', array('jquery'), '0.1', true);
-			wp_enqueue_script('greenimp-js', get_template_directory_uri() . '/assets/js/main.js', array('jquery'), '0.1', true);
 
 			// include modernizr (from greenimpbase)
 			wp_enqueue_script('modernizr', get_template_directory_uri() . '/assets/vendor/modernizr-2.6.2.min.js', null, '2.6.2', true);

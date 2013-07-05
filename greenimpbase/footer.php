@@ -24,5 +24,15 @@ $theme = Theme::getInstance();
 	</div>
 
 	<?php wp_footer(); ?>
+
+	<script>
+		(function($, window, document){
+			$(document).bill({
+				modal:{
+					handle:'.entry-content a[href$="jpg"], .entry-content a[href$="png"], .entry-content a[href$="jpeg"]'
+				}
+			});
+		})(jQuery, window, document);
+	</script>
 </body>
 </html>
