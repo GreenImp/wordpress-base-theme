@@ -58,6 +58,10 @@ if(!class_exists('Theme')){
 
 			// replace the captions with HTML5 fig and figcaptions
 			add_filter('img_caption_shortcode', array($this, 'captionShortcode'), 10, 3);
+
+			if(!isset($this->options['allowEditor']) || (true != $this->options['allowEditor'])){
+				$this->disableEditor();
+			}
 		}
 
 		/**
@@ -817,7 +821,7 @@ if(!class_exists('Theme')){
 		 * @param null|string $content
 		 * @return string
 		 */
-		function captionShortcode($val, $attr, $content = null){
+		public function captionShortcode($val, $attr, $content = null){
 			extract(shortcode_atts(
 				array(
 					'id'		=> '',
@@ -837,6 +841,15 @@ if(!class_exists('Theme')){
 						do_shortcode($content) .
 						'<figcaption id="figcaption_' . $id . '" class="wp-caption-text">' . $caption . '</figcaption>
 					</figure>';
+		}
+
+		/**
+		 * Disables the Wordpress inline theme/plugin editor
+		 */
+		public function disableEditor(){
+			if(!defined('DISALLOW_FILE_EDIT')){
+				define('DISALLOW_FILE_EDIT', true);
+			}
 		}
 	}
 }
