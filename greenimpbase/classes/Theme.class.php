@@ -322,10 +322,13 @@ if(!class_exists('Theme')){
 						$keywords = trim(trim(get_post_meta(get_the_ID(), 'meta_keywords', true), ','));
 						if($keywords == ''){
 							// no custom field defined or is empty - get keywords from post tags
-							foreach(get_the_tags() as $tag){
-								$keywords .= utf8_decode(apply_filters('the_tags', $tag->name)) . ',';
+							$tags = get_the_tags();
+							if($tags){
+								foreach($tags as $tag){
+									$keywords .= utf8_decode(apply_filters('the_tags', $tag->name)) . ',';
+								}
+								$keywords = rtrim($keywords, ',');
 							}
-							$keywords = rtrim($keywords, ',');
 						}
 
 						// check if we have a custom field for the description
